@@ -52,7 +52,7 @@
     "typescript": "^3.9.3"
   },
   "peerDependencies": {
-    "ra-core": "^4.2.4"
+    "ra-core": "^5.7.0"
   },
   "dependencies": {
     "query-string": "^6.12.1"
