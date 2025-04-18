@@ -8,6 +8,18 @@ import {
   DataProvider,
 } from 'ra-core';
 
+import {
+  GetListParams,
+  GetOneParams,
+  GetManyParams,
+  GetManyReferenceParams,
+  UpdateParams,
+  UpdateManyParams,
+  CreateParams,
+  DeleteParams,
+  DeleteManyParams,
+} from 'react-admin';
+
 export {
   default as tokenAuthProvider,
   fetchJsonWithAuthToken,
@@ -108,11 +120,11 @@ export default (
     );
   };
   return {
-    getList: async (resource, params) => {
+    getList: async (resource: string, params: GetListParams) => {
       const query = {
         ...getFilterQuery(params.filter),
-        ...getPaginationQuery(params.pagination),
-        ...getOrderingQuery(params.sort),
+        ...getPaginationQuery(params.pagination!),
+        ...getOrderingQuery(params.sort!),
       };
       const url = `${apiUrl}/${resource}/?${stringify(query)}`;
 
@@ -124,24 +136,27 @@ export default (
       };
     },
 
-    getOne: async (resource, params) => {
+    getOne: async (resource: string, params: GetOneParams) => {
       const data = await getOneJson(resource, params.id);
       return {
         data,
       };
     },
 
-    getMany: (resource, params) => {
-      return Promise.all(params.ids.map((id) => getOneJson(resource, id))).then(
-        (data) => ({ data })
-      );
+    getMany: (resource: string, params: GetManyParams) => {
+      return Promise.all(
+        params.ids.map(id => getOneJson(resource, id))
+      ).then(data => ({ data }));
     },
 
-    getManyReference: async (resource, params) => {
+    getManyReference: async (
+      resource: string,
+      params: GetManyReferenceParams
+    ) => {
       const query = {
         ...getFilterQuery(params.filter),
-        ...getPaginationQuery(params.pagination),
-        ...getOrderingQuery(params.sort),
+        ...getPaginationQuery(params.pagination!),
+        ...getOrderingQuery(params.sort!),
         [params.target]: params.id,
       };
       const url = `${apiUrl}/${resource}/?${stringify(query)}`;
@@ -153,7 +168,7 @@ export default (
       };
     },
 
-    update: async (resource: string, params: Params) => {
+    update: async (resource: string, params: UpdateParams<any>) => {
       // Create a new object that only includes the fields that have changed
       const updatedData = Object.keys(params.data).reduce(
         (result: { [key: string]: any }, key: string) => {
@@ -176,41 +191,43 @@ export default (
 
       return { data: json };
     },
-  
+
     /*
     updateMany updates multiple id's with the same data
     */
-    updateMany: (resource, params) =>
+    updateMany: (resource: string, params: UpdateManyParams<any>) =>
       Promise.all(
-        params.ids.map((id) =>
+        params.ids.map(id =>
           callHttpClientFileHandling(
             getUrlForId(resource, id),
             'PATCH',
             params.data
           )
         )
-      ).then((responses) => ({ data: responses.map(({ json }) => json.id) })),
-      /*
+      ).then(responses => ({ data: responses.map(({ json }) => json.id) })),
+    /*
       bulkUpdate updates multiple id's with different data
       */
-      bulkUpdate: async (resource, params) => {
-        const response = await callHttpClientFileHandling(
-          `${apiUrl}/${resource}/`,
-          'PATCH',
-          params.data
+    bulkUpdate: async (resource: string, params: Params) => {
+      const response = await callHttpClientFileHandling(
+        `${apiUrl}/${resource}/`,
+        'PATCH',
+        params.data
+      );
+
+      // Check for a successful response code
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          data: params.data, // Return the data that was sent for confirmation
+        };
+      } else {
+        throw new Error(
+          `Failed to bulk update ${resource}: ${response.status}`
         );
-      
-        // Check for a successful response code
-        if (response.status >= 200 && response.status < 300) {
-          return {
-            data: params.data, // Return the data that was sent for confirmation
-          };
-        } else {
-          throw new Error(`Failed to bulk update ${resource}: ${response.status}`);
-        }
-      },
+      }
+    },
 
-    create: async (resource, params) => {
+    create: async (resource: string, params: CreateParams<any>) => {
       const { json } = await callHttpClientFileHandling(
         `${apiUrl}/${resource}/`,
         'POST',
@@ -220,7 +237,7 @@ export default (
         data: { ...json },
       };
     },
-    submitTask: async (resource, params) => {
+    submitTask: async (resource: string, params: Params) => {
       const { json } = await callHttpClientFileHandling(
         `${apiUrl}/${resource}/`,
         'POST',
@@ -231,14 +248,14 @@ export default (
       };
     },
 
-    delete: (resource, params) =>
+    delete: (resource: string, params: DeleteParams<any>) =>
       httpClient(getUrlForId(resource, params.id), {
         method: 'DELETE',
       }).then(() => ({ data: params.previousData })),
 
-    deleteMany: (resource, params) =>
+    deleteMany: (resource: string, params: DeleteManyParams) =>
       Promise.all(
-        params.ids.map((id) =>
+        params.ids.map(id =>
           httpClient(getUrlForId(resource, id), {
             method: 'DELETE',
           })

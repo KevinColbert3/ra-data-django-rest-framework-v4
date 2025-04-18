@@ -4,7 +4,7 @@ export interface Options {
   obtainAuthTokenUrl?: string;
 }
 
-function jwtTokenAuthProvider(options: Options = {}): AuthProvider {
+function jwtTokenAuthProvider(options: Options): AuthProvider {
   const opts = {
     obtainAuthTokenUrl: '/api/token/',
     ...options,
@@ -38,7 +38,7 @@ function jwtTokenAuthProvider(options: Options = {}): AuthProvider {
     },
     checkAuth: () =>
       localStorage.getItem('access') ? Promise.resolve() : Promise.reject(),
-    checkError: (error) => {
+    checkError: error => {
       const status = error.status;
       if (status === 401 || status === 403) {
         localStorage.removeItem('access');

@@ -9,13 +9,13 @@ const fetchAnonymousRouteAccess = (pathname: string) => {
   const anonymousRoutes = [
     '/reset-password/verify-token',
     '/reset-password/confirm',
-  ]
+  ];
   if (anonymousRoutes.includes(pathname)) {
-    return true
+    return true;
   } else {
-    return false
+    return false;
   }
-}
+};
 
 function tokenAuthProvider(options: Options): AuthProvider {
   return {
@@ -48,7 +48,7 @@ function tokenAuthProvider(options: Options): AuthProvider {
       localStorage.removeItem('token'); // remove the obsolete 'token' item if it exists
       return auth ? Promise.resolve() : Promise.reject();
     },
-    checkError: (error) => {
+    checkError: error => {
       const status = error.status;
       if (status === 401 || status === 403) {
         localStorage.removeItem('auth');
@@ -57,7 +57,7 @@ function tokenAuthProvider(options: Options): AuthProvider {
       return Promise.resolve();
     },
     getIdentity: async () => {
-      const pathname = window.location.pathname
+      const pathname = window.location.pathname;
       if (fetchAnonymousRouteAccess(pathname)) {
         return Promise.resolve({ id: null, fullName: null, avatar: null });
       }
@@ -85,7 +85,7 @@ function tokenAuthProvider(options: Options): AuthProvider {
     },
     getPermissions: () => {
       try {
-        const pathname = window.location.pathname
+        const pathname = window.location.pathname;
         if (fetchAnonymousRouteAccess(pathname)) {
           return Promise.resolve({ groups: [], user_permissions: [] });
         }
@@ -93,7 +93,10 @@ function tokenAuthProvider(options: Options): AuthProvider {
         if (auth) {
           const parsedAuth = JSON.parse(auth);
           if (parsedAuth && parsedAuth.groups && parsedAuth.user_permissions) {
-            return Promise.resolve({ groups: parsedAuth.groups, user_permissions: parsedAuth.user_permissions });
+            return Promise.resolve({
+              groups: parsedAuth.groups,
+              user_permissions: parsedAuth.user_permissions,
+            });
           } else {
             throw new Error('Invalid auth data in local storage');
           }
@@ -145,9 +148,9 @@ async function fetchUserData(id: string, options: Options) {
   return authData;
 }
 export function fetchJsonWithAuthToken(url: string, options: object) {
-  const pathname = window.location.pathname
+  const pathname = window.location.pathname;
   if (fetchAnonymousRouteAccess(pathname)) {
-    return true
+    return true;
   }
   return fetchUtils.fetchJson(
     url,
